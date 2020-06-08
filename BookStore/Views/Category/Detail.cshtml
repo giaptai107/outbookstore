@@ -1,5 +1,17 @@
 ﻿
 @model System.Collections.Generic.List<BookStore.Models.Book>
+@{ 
+    int i = 1;
+}
+<style>
+    ul.pagination-btns.flex-center > ol {
+        display: flex;
+        list-style: none;
+    }
+    .product-item{
+        display: none;
+    }
+</style>
 <section class="breadcrumb-section">
     <h2 class="sr-only">Site Breadcrumb</h2>
     <div class="container">
@@ -167,7 +179,7 @@
 
                     @foreach (Book kv in ViewData["GetAllBookOfCategory"] as List<Book>)
                     {
-                        <div class="col-lg-4 col-sm-6">0
+                        <div class="col-lg-4 col-sm-6 product-item" data-pag="@(i++)">
                             <div class="product-card card-style-list">
                                 <div class="product-grid-content">
                                     <div class="product-header">
@@ -272,32 +284,32 @@
                 </div>
                 <div class="row pt--30">
                     <div class="col-md-12">
+                       
+                        
                         <div class="pagination-block">
                             <ul class="pagination-btns flex-center">
-                                <li>
-                                    <a href="" class="single-btn prev-btn ">
-                                        |<i class="zmdi zmdi-chevron-left"></i>
-                                    </a>
-                                </li>
+                               
                                 <li>
                                     <a href="" class="single-btn prev-btn ">
                                         <i class="zmdi zmdi-chevron-left"></i>
                                     </a>
                                 </li>
-                                <li class="active"><a href="" class="single-btn">1</a></li>
-                                <li><a href="" class="single-btn">2</a></li>
-                                <li><a href="" class="single-btn">3</a></li>
-                                <li><a href="" class="single-btn">4</a></li>
+                                <ol>
+                                    <!--
+                                    <li class="active">
+                                        <a href="" class="single-btn">1</a>
+                                    </li>
+                                    <li><a href="" class="single-btn">2</a></li>
+                                    <li><a href="" class="single-btn">3</a></li>
+                                    <li><a href="" class="single-btn">4</a></li>
+                                    -->
+                                </ol>
                                 <li>
                                     <a href="" class="single-btn next-btn">
                                         <i class="zmdi zmdi-chevron-right"></i>
                                     </a>
                                 </li>
-                                <li>
-                                    <a href="" class="single-btn next-btn">
-                                        <i class="zmdi zmdi-chevron-right"></i>|
-                                    </a>
-                                </li>
+                                
                             </ul>
                         </div>
                     </div>
@@ -462,17 +474,17 @@
                     <div class="single-block">
                         <h3 class="sidebar-title">Categories</h3>
                         <ul class="sidebar-menu--shop">
-                            @foreach (KeyValuePair<Category, int> kv in ViewData["List1"] as Dictionary<Category, int>)
+                            @foreach (KeyValuePair<Category, int> category in ViewData["List1"] as Dictionary<Category, int>)
                             {
-                                <li><a href="@Url.Action("Detail", "Category", new {id = kv.Key.Id})">@kv.Key.Title (@kv.Value)</a> </li>
-                                @if (@kv.Key.ChildCategories != null && @kv.Key.ChildCategories.Count > 0)
+                                <li><a href="@Url.Action("Detail", "Category", new {id = category.Key.Id})">@category.Key.Title (@category.Value)</a> </li>
+                                @if (@category.Key.ChildCategories != null && @category.Key.ChildCategories.Count > 0)
                                 {
-                        <ul class="inner-cat-items">
-                            @foreach (Category sub in @kv.Key.ChildCategories)
-                            {
-                                <li><a href="@Url.Action("Detail", "Category", new {id = sub.Id})">@sub.Title</a></li>
-                            }
-                        </ul>
+                                    <ul class="inner-cat-items">
+                                        @foreach (Category sub in @category.Key.ChildCategories)
+                                        {
+                                            <li><a href="@Url.Action("Detail", "Category", new {id = sub.Id})">@sub.Title</a></li>
+                                        }
+                                    </ul>
                                 }
                             }
 
@@ -525,9 +537,63 @@
                     </div>
                 </div>
             </div>
-            </div>
-
         </div>
 
-
+    </div>
 </main>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    
+    let list_product = $('.shop-product-wrap > div');
+    let count = list_product.length; 
+    let pageSize = 2;
+    let pageCount = count / pageSize; 
+    for (let i = 1; i < pageCount+1; i++) { 
+        let item = `<li><a href="javascript:void(0)" class="single-btn" data-pagi="${i}">${i}</a></li>`;
+        $('ul.pagination-btns.flex-center > ol').append(item); 
+    }
+    $('ul.pagination-btns.flex-center > ol').children('li').eq(0).addClass('active');
+    let currentPage = 1;
+    $(function () {
+        pagination(currentPage);
+        $('ul.pagination-btns.flex-center > ol > li').each(function (index) {
+            $(this).on('click', function (event) {
+                event.preventDefault();
+                $('ul.pagination-btns.flex-center > ol > li').removeClass('active');
+                $(this).addClass('active');
+                currentPage = $(this).children('a').attr('data-pagi');
+                pagination(parseInt(currentPage));
+            });
+        });
+       
+        $('a.single-btn.prev-btn').click(function (event) {
+            event.preventDefault();
+            currentPage > 1 ? currentPage-- : false;
+            $('ul.pagination-btns.flex-center > ol > li').removeClass('active');
+            console.log($('*[data-pagi="' + currentPage + '"]').html());
+            $('*[data-pagi="' + currentPage + '"]').addClass('active');
+            pagination(currentPage);
+        })
+        $('a.single-btn.next-btn').click(function (event) {
+            event.preventDefault();
+            currentPage <= count ? currentPage++ : false;
+            $('ul.pagination-btns.flex-center > ol > li').removeClass('active');
+            $('[data-pagi="' + currentPage + '"]').addClass('active');
+            pagination(currentPage);
+        })
+        function pagination(currentPage) {
+            pageShow = ((currentPage - 1) * pageSize) + 1;
+
+            $('.product-item').each(function () {
+                index = $(this).attr('data-pag');
+
+                if (index >= pageShow && index <= currentPage * pageSize) {
+                    $(this).show();
+                }
+                else
+                    $(this).hide();
+            })
+        }
+    })
+    
+</script>
